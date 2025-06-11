@@ -1,0 +1,105 @@
+<!-- 社内お弁当注文システム 拡張バージョン（ランチデー対応・出社者一括入力・価格切替・CSV名簿対応） -->
+<!-- 注文画面・履歴画面の価格表示ロジック反映 -->
+
+<!-- ...（管理者画面など既存コードは省略） ... -->
+
+<script>
+// ...（既存の lunchDays やユーザー管理・価格関数などのコード） ...
+
+function loadOrderForm() {
+  const today = new Date();
+  const orderContent = document.getElementById('orderContent');
+  let html = '';
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    const dateStr = date.toISOString().split('T')[0];
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dayName = dayNames[date.getDay()];
+
+    if (menus[dateStr]) {
+      const canOrderNormal = canOrderNormalBento(date);
+      const canOrderNoodleMenu = canOrderNoodle(date);
+      const currentOrder = getUserOrder(dateStr);
+
+      html += `
+        <div class="menu-card">
+          <div class="menu-date">
+            ${date.getMonth() + 1}月${date.getDate()}日（${dayName}）
+            ${getOrderStatusBadge(date)}
+            ${isLunchDay(dateStr) ? '<span class="status-badge status-active">🍱補助対象</span>' : ''}
+          </div>
+          ${getDeadlineInfo(date)}
+          <div class="menu-options">
+            <div class="menu-option ${currentOrder === 'none' ? 'selected' : ''}" onclick="selectOption('${dateStr}', 'none')">
+              <div class="option-name">注文しない</div>
+              <div class="option-price">0円</div>
+            </div>
+            <div class="menu-option ${currentOrder === 'normal' ? 'selected' : ''}" onclick="selectOption('${dateStr}', 'normal')" ${!canOrderNormal ? 'style="opacity:0.5;cursor:not-allowed;"' : ''}>
+              <div class="option-name">${menus[dateStr].normal}</div>
+              <div class="option-price">${getPriceDisplay('normal', dateStr)}</div>
+            </div>
+            <div class="menu-option ${currentOrder === 'large' ? 'selected' : ''}" onclick="selectOption('${dateStr}', 'large')" ${!canOrderNormal ? 'style="opacity:0.5;cursor:not-allowed;"' : ''}>
+              <div class="option-name">${menus[dateStr].normal}（大盛り）</div>
+              <div class="option-price">${getPriceDisplay('large', dateStr)}</div>
+            </div>
+            <div class="menu-option ${currentOrder === 'mannan' ? 'selected' : ''}" onclick="selectOption('${dateStr}', 'mannan')" ${!canOrderNormal ? 'style="opacity:0.5;cursor:not-allowed;"' : ''}>
+              <div class="option-name">${menus[dateStr].normal}（マンナン）</div>
+              <div class="option-price">${getPriceDisplay('mannan', dateStr)}</div>
+            </div>
+            <div class="menu-option ${currentOrder === 'noodle' ? 'selected' : ''}" onclick="selectOption('${dateStr}', 'noodle')" ${!canOrderNoodleMenu ? 'style="opacity:0.5;cursor:not-allowed;"' : ''}>
+              <div class="option-name">${menus[dateStr].noodle}</div>
+              <div class="option-price">${getPriceDisplay('noodle', dateStr)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+  orderContent.innerHTML = html;
+}
+
+function updateHistory() {
+  const period = document.getElementById('historyPeriod').value;
+  const historyContent = document.getElementById('historyContent');
+
+  if (!orders[currentUser.id]) {
+    historyContent.innerHTML = '<p>注文履歴がありません。</p>';
+    return;
+  }
+
+  const userOrders = orders[currentUser.id];
+  const now = new Date();
+  let totalCost = 0;
+  let html = '<table><thead><tr><th>日付</th><th>メニュー</th><th>タイプ</th><th>自己負担額</th></tr></thead><tbody>';
+
+  Object.keys(userOrders).sort().forEach(dateStr => {
+    const orderDate = new Date(dateStr);
+    const option = userOrders[dateStr];
+
+    if (shouldIncludeInPeriod(orderDate, period) && option !== 'none') {
+      const cost = getSelfCost(option, dateStr);
+      totalCost += cost;
+
+      const optionNames = {
+        'normal': '通常', 'large': '大盛り', 'mannan': 'マンナン', 'noodle': '麺類'
+      };
+      const menuName = option === 'noodle' ? (menus[dateStr]?.noodle || '麺類') : (menus[dateStr]?.normal || '通常弁当');
+
+      html += `
+        <tr>
+          <td>${dateStr}${isLunchDay(dateStr) ? ' 🍱' : ''}</td>
+          <td>${menuName}</td>
+          <td>${optionNames[option]}</td>
+          <td>${cost}円</td>
+        </tr>
+      `;
+    }
+  });
+
+  html += '</tbody></table>';
+  html += `<div class="order-summary"><div class="summary-total">合計自己負担額: ${totalCost}円</div></div>`;
+  historyContent.innerHTML = html;
+}
+</script>
