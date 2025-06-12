@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>出社者登録</title></head>
+<body>
+  <h1>出社者一括登録</h1>
+  <input type="date" id="targetDate"/><br/><br/>
+  <div id="list"></div>
+  <button onclick="submit()">通常弁当として登録</button>
+  <script>
+    let users = [];
+    fetch('users.csv').then(r => r.text()).then(t => {
+      users = t.split(/\r?\n/).slice(1).map(l => l.split(','));
+      const list = document.getElementById('list');
+      users.forEach(([id, name]) => {
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.value = name;
+        list.appendChild(cb);
+        list.appendChild(document.createTextNode(" " + name));
+        list.appendChild(document.createElement('br'));
+      });
+    });
+    function submit() {
+      const date = document.getElementById('targetDate').value;
+      const names = [...document.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
+      if (!date || names.length === 0) return alert("日付と出社者を選んでください");
+      alert(`${date} の出社者: \n` + names.join("\n"));
+    }
+  </script>
+</body>
+</html>

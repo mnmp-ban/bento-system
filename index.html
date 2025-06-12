@@ -1,36 +1,32 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>社内お弁当注文システム</title>
-    <style>
-        body { font-family: sans-serif; background: #f0f0f5; padding: 2rem; }
-        h1 { color: #4a4a4a; }
-        .login-box { background: #fff; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
-        .btn { background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn:hover { background: #5a6dd8; }
-    </style>
-</head>
+<head><meta charset="UTF-8"><title>ログイン</title></head>
 <body>
-    <div class="login-box">
-        <h1>🍱 社内お弁当注文システム</h1>
-        <div class="form-group">
-            <label for="empId">社員ID</label>
-            <input type="text" id="empId" placeholder="例: 1001">
-        </div>
-        <div class="form-group">
-            <label for="empName">名前</label>
-            <input type="text" id="empName" placeholder="例: 山田愛美">
-        </div>
-        <button class="btn" onclick="alert('ログイン機能はまだ実装されていません')">ログイン</button>
-    </div>
-
-    <script>
-        // 必要に応じてJavaScriptを追加
-    </script>
+  <h1>お弁当システムログイン</h1>
+  <p>名字を入力してください（管理者はパスワードも）</p>
+  <input id="name" placeholder="名字"/><br/>
+  <input id="pass" type="password" placeholder="パスワード" style="display:none"/><br/>
+  <button onclick="login()">ログイン</button>
+  <script>
+    const admins = ["上田","湯澤","須藤","藤井","小口","後河内","山田","屋ヶ田"];
+    let generalUsers = [];
+    fetch('users.csv').then(r => r.text()).then(t => {
+      generalUsers = t.split(/\r?\n/).slice(1).map(l => l.split(',')[1]);
+    });
+    function login() {
+      const n = document.getElementById('name').value.trim();
+      const p = document.getElementById('pass').value.trim();
+      if (admins.includes(n)) {
+        document.getElementById('pass').style.display = "block";
+        if (!p) return alert("パスワードを入力してください");
+        if (p === "admin123") location.href = "admin.html";
+        else alert("パスワードが違います");
+      } else if (generalUsers.includes(n)) {
+        location.href = "order.html?name=" + encodeURIComponent(n);
+      } else {
+        alert("登録されていない名字です");
+      }
+    }
+  </script>
 </body>
 </html>
