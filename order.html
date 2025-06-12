@@ -1,1 +1,44 @@
-<!-- order.html：社員が不要／通常／大盛り／マンナン／麺から選択、履歴あり -->
+<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>注文画面</title></head>
+<body>
+  <h1>🍱 お弁当注文</h1>
+  <div id="userName"></div>
+  <p>注文内容を選んでください：</p>
+  <select id="lunch">
+    <option value="none">注文しない</option>
+    <option value="normal">通常</option>
+    <option value="large">大盛り</option>
+    <option value="mannan">マンナン</option>
+    <option value="noodle">麺類</option>
+  </select><br/><br/>
+  <button onclick="submitOrder()">注文する</button>
+  <h3>履歴</h3>
+  <ul id="historyList"></ul>
+  <script>
+    const name = new URLSearchParams(location.search).get("name") || "未設定";
+    document.getElementById('userName').textContent = `こんにちは、${name} さん`;
+
+    const key = "orders_" + name;
+    const history = JSON.parse(localStorage.getItem(key) || "[]");
+    const list = document.getElementById('historyList');
+    history.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      list.appendChild(li);
+    });
+
+    function submitOrder() {
+      const o = document.getElementById('lunch').value;
+      const now = new Date().toISOString().split("T")[0];
+      const entry = `${now}: ${o}`;
+      history.push(entry);
+      localStorage.setItem(key, JSON.stringify(history));
+      const li = document.createElement("li");
+      li.textContent = entry;
+      list.appendChild(li);
+      alert("注文を登録しました");
+    }
+  </script>
+</body>
+</html>

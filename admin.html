@@ -1,1 +1,33 @@
-<!-- admin.html：出社者登録・メニュー入力・注文集計・15日締めレポート -->
+<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>管理者 - 出社者登録</title></head>
+<body>
+  <h1>🛠 出社者入力 & 通常弁当登録</h1>
+  <p>対象日：</p>
+  <input type="date" id="targetDate"/><br/><br/>
+  <div id="list"></div>
+  <button onclick="submit()">通常弁当として登録</button>
+  <script>
+    let users = [];
+    fetch('users.csv').then(r => r.text()).then(t => {
+      users = t.split(/\r?\n/).slice(1).map(l => l.split(',')[1]);
+      const div = document.getElementById('list');
+      users.forEach(name => {
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.value = name;
+        div.appendChild(cb);
+        div.appendChild(document.createTextNode(" " + name));
+        div.appendChild(document.createElement("br"));
+      });
+    });
+    function submit() {
+      const date = document.getElementById("targetDate").value;
+      if (!date) return alert("日付を選んでください");
+      const checked = [...document.querySelectorAll("input[type=checkbox]:checked")].map(cb => cb.value);
+      if (checked.length === 0) return alert("出社者を1人以上選択してください");
+      alert(`${date} の出社者を登録しました:\n\n` + checked.join("\n"));
+    }
+  </script>
+</body>
+</html>
